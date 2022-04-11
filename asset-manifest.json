@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.css": "/kakao_map__mask/static/css/main.31d6cfe0.css",
+    "main.js": "/kakao_map__mask/static/js/main.d883616a.js",
+    "index.html": "/kakao_map__mask/index.html",
+    "main.d883616a.js.map": "/kakao_map__mask/static/js/main.d883616a.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.31d6cfe0.css",
+    "static/js/main.d883616a.js"
+  ]
+}
