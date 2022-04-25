@@ -1,74 +1,100 @@
 import React,{useEffect,useState} from 'react';
 import styled from 'styled-components';
 import './App.css';
-import { Map,MapMarker,MarkerClusterer,useMap } from 'react-kakao-maps-sdk';
+import { Map,MapMarker,MarkerClusterer,useMap,MapTypeId } from 'react-kakao-maps-sdk';
+import Nav from './nav';
+const { kakao } = window;
 
-const MapBlock = styled.div`
-    width: 100vw;
-    height: 100vh;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-    margin-right: auto;
-    border-style: solid;
-    border-width: medium;
-    border-color: #D8D8D8;
-`
-function App() {
-  const data = [
-    {
-      content: <div style={{ color: "#000" }}>카카오</div>,
-      latlng: { lat: 33.450705, lng: 126.570677 },
-    },
-    {
-      content: <div style={{ color: "#000" }}>생태연못</div>,
-      latlng: { lat: 33.450936, lng: 126.569477 },
-    },
-    {
-      content: <div style={{ color: "#000" }}>텃밭</div>,
-      latlng: { lat: 33.450879, lng: 126.56994 },
-    },
-    {
-      content: <div style={{ color: "#000" }}>근린공원</div>,
-      latlng: { lat: 33.451393, lng: 126.570738 },
-    },
-  ]
-
-  const EventMarkerContainer = ({ position, content }) => {
-    const map = useMap()
-    const [isVisible, setIsVisible] = useState(false)
-    return (
-      <MapMarker
-        position={position} // 마커를 표시할 위치
-        // @ts-ignore
-        onMouseOver={() => setIsVisible(true)}
-        onMouseOut={() => setIsVisible(false)}
-      >
-        {isVisible && content}
-      </MapMarker>
-    )
+const KeyWordBtnBlock = styled.div`
+  position:fixed;
+  top:5px;
+  left:5px;
+  z-index:5;
+  button{
+    margin-right:5px;
   }
+`
+const Url = styled.div`
+  margin-top:350px;
+ 
+`
+const Hi = styled.div`
+   position:fixed;
+  top:350px;
+`
 
+function App() {
+  const [info, setInfo] = useState()
+  const [markers, setMarkers] = useState([])
+  const [map, setMap] = useState()
+  const [keyWord,setKeyWord] = useState("")
+
+  useEffect(() => {
+    if (!map) return
+    const ps = new kakao.maps.services.Places()
+    ps.keywordSearch(keyWord, (data, status, _pagination) => {
+      if (status === kakao.maps.services.Status.OK) {
+        // 검색된 장소 위치를 기준으로 지도 범위를 재설정하기위해
+  console.log(data)
+  // LatLngBounds 객체에 좌표를 추가합니다
+        const bounds = new kakao.maps.LatLngBounds()
+        let markers = []
+        for (var i = 0; i < data.length; i++) {
+          // @ts-ignore
+          markers.push({
+            position: {
+              lat: data[i].y,
+              lng: data[i].x,
+            },
+            content: data[i].place_name,
+            url: data[i].place_url
+          })
+          // @ts-ignore
+          bounds.extend(new kakao.maps.LatLng(data[i].y, data[i].x))
+        }
+        setMarkers(markers)
+
+        // 검색된 장소 위치를 기준으로 지도 범위를 재설정합니다
+        map.setBounds(bounds)
+      }
+    })
+  }, [map,keyWord])
   return (
-    <Map // 지도를 표시할 Container
+    <Map // 로드뷰를 표시할 Container
       center={{
-        // 지도의 중심좌표
-        lat: 33.450701,
-        lng: 126.570667,
+        lat: 37.566826,
+        lng: 126.9786567,
       }}
       style={{
-        // 지도의 크기
-        width: "100vw",
-        height: "100vh",
+        width: "100%",
+        height: "350px",
       }}
-      level={3} // 지도의 확대 레벨
+      level={3}
+      onCreate={setMap}
     >
-      {data.map((value) => (
-        <EventMarkerContainer
-          key={`EventMarkerContainer-${value.latlng.lat}-${value.latlng.lng}`}
-          position={value.latlng}
-          content={value.content}
-        />
+      <KeyWordBtnBlock>
+        <button onClick={() => {setKeyWord("순천 맛집")}}>순천 맛집</button>
+        <button onClick={() => {setKeyWord("순천 행사")}}>순천 행사</button>
+      </KeyWordBtnBlock>
+      {markers.map((marker) => (
+        <>
+        <MapMarker
+          key={`marker-${marker.content}-${marker.position.lat},${marker.position.lng}`}
+          position={marker.position}
+          onClick={() => setInfo(marker)}
+        >
+          {info &&info.content === marker.content && (
+            <>
+            <div style={{color:"#000"}}>{marker.content}</div>
+            </>
+          )}
+        </MapMarker>
+        {info &&info.content === marker.content && (
+            <>
+            {marker.url}
+            </>
+          )}
+      </>
       ))}
     </Map>
   )
